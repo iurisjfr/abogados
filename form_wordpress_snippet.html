@@ -1,0 +1,44 @@
+<!-- Formulario WordPress/Gutenberg -->
+<form id="ia-mercantil-form" style="display:grid;gap:12px;max-width:640px">
+  <label>Documento (.docx) de la demanda
+    <input type="file" name="file" accept=".docx" required>
+  </label>
+  <input type="text" name="juzgado" placeholder="Juzgado" required>
+  <input type="text" name="ciudad" placeholder="Ciudad" required>
+  <input type="text" name="expediente" placeholder="Expediente" required>
+  <input type="text" name="actor" placeholder="Actor" required>
+  <input type="text" name="demandado" placeholder="Demandado" required>
+  <button type="submit">Generar contestación</button>
+</form>
+<div id="ia-mercantil-status"></div>
+<script>
+const API = "https://TU-API.com"; // Cambia por tu dominio de API
+const st = document.getElementById('ia-mercantil-status');
+document.getElementById('ia-mercantil-form').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  st.textContent = "Subiendo documento...";
+  const f = e.target;
+  const fd = new FormData();
+  fd.append('file', f.file.files[0]);
+  fd.append('case_meta', JSON.stringify({ jurisdiccion:'MX-mercantil', rol:'demandado' }));
+  const up = await fetch(`${API}/ingest`, { method:'POST', body: fd }).then(r=>r.json());
+  st.textContent = "Generando contestación...";
+  const body = {
+    case_id: up.case_id,
+    rol: 'demandado',
+    jurisdiccion: 'MX-mercantil',
+    objetivo: 'Contestar demanda mercantil',
+    datos_expediente: {
+      juzgado: f.juzgado.value,
+      ciudad: f.ciudad.value,
+      expediente: f.expediente.value,
+      actor: f.actor.value,
+      demandado: f.demandado.value
+    }
+  };
+  const dr = await fetch(`${API}/draft`, {
+    method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)
+  }).then(r=>r.json());
+  st.innerHTML = `Listo: <a href="${API}${dr.download_url}" target="_blank">Descargar contestación (DOCX)</a>`;
+});
+</script>
