@@ -1,0 +1,7 @@
+fastapi
+uvicorn
+python-docx
+psycopg2-binary
+mammoth
+beautifulsoup4
+requests
